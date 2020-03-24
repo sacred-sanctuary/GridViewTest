@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import jp.sacredsanctuary.common.util.LogUtil;
+import jp.sacredsanctuary.common.util.Preconditions;
 
 public class LoadImageItemListThread implements Callable<List<String>> {
     private static final String ClassName = LoadImageItemListThread.class.getSimpleName();
@@ -46,10 +47,14 @@ public class LoadImageItemListThread implements Callable<List<String>> {
 
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         Cursor cursor = mContext.getContentResolver().query(uri, null, null, null, null);
+        if (!Preconditions.checkNotNull(cursor)) {
+            LogUtil.E(ClassName, "loadImageItemList() [OUT] cursor is null pointer");
+            return list;
+        }
         cursor.moveToLast();
 
         for (int i = 0; i < cursor.getCount(); i++) {
-            String filePath = cursor.getString(1);
+            String filePath = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
             list.add(filePath);
             cursor.moveToPrevious();
         }
